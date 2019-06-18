@@ -8,7 +8,7 @@ setup(
     python_requires='>3.6.0',
     version='0.0.1',
     description='some kind of asyncio library for GoPro',
-    url='http://github.com/openlakeview/python-sllib',
+    url='http://github.com/opensounder/python-sllib',
     long_description=long_description,
     long_description_content_type="text/markdown",
     classifiers=[
