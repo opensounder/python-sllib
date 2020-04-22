@@ -27,7 +27,7 @@ class SlReader:
         :returns:
             A read block instance
         """
-        block = SlBlock.read(self.fs, self.header.version)
+        block = SlBlock.read(self.fs, self.header.format)
         if block is None:
             raise StopIteration()
         return block

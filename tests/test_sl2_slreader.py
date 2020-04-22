@@ -3,7 +3,7 @@ from os import path
 import sllib
 
 
-class TestSlReader(unittest.TestCase):
+class TestSl2SlReader(unittest.TestCase):
     def setUp(self):
         self.dirname = path.dirname(path.abspath(__file__))
         self.path_small = path.join(self.dirname,
@@ -13,7 +13,11 @@ class TestSlReader(unittest.TestCase):
                                  'sample-data-lowrance', 'Elite_4_Chirp',
                                  'version-1.sl2')
 
-    def test_header(self):
+        self.path_sl3 = path.join(self.dirname,
+                                  'sample-data-lowrance', 'unknown',
+                                  'sonar-log-api-testdata.sl3')
+
+    def test_header_sl2(self):
         with sllib.create_reader(self.path_small) as reader:
             assert reader
             header = reader.header
@@ -24,6 +28,7 @@ class TestSlReader(unittest.TestCase):
 
         with sllib.create_reader(self.path_v1) as reader:
             assert reader
+            assert reader.header.format == 2
             assert reader.header.version == 1
 
     def test_next(self):
@@ -39,8 +44,9 @@ class TestSlReader(unittest.TestCase):
             assert x.previous_composite_sidescan_offset == 0
             assert x.blocksize == 3216
             assert x.previous_blocksize == 0
+            assert x.channel == 0
             assert x.packetsize == 3072
-            assert x.frame_index == 0
+            assert x.block_index == 0
             assert x.upper_limit == 0
             assert x.lower_limit == 19.600000381469727
             assert x.frequency == 8
