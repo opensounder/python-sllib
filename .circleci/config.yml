@@ -1,0 +1,29 @@
+version: 2.1
+
+orbs:
+  python: circleci/python@0.2.1
+
+jobs:
+  build-and-test:
+    executor: python/default
+    steps:
+      - checkout
+      - run: git submodule sync
+      - run: git submodule update --init
+      - python/load-cache
+      - python/install-deps
+      - python/save-cache
+      - run:
+          name: Test
+          command: |
+            $HOME/.local/bin/coverage run --branch --include="sllib/*" -m unittest discover
+            $HOME/.local/bin/coverage report
+            $HOME/.local/bin/coverage html
+      - store_artifacts:
+          path: htmlcov
+
+
+workflows:
+  main:
+    jobs:
+      - build-and-test
