@@ -1,6 +1,6 @@
 
 from .slheader import SlHeader
-from .slblock import SlBlock
+from .slblock import SlBlock, build_pattern
 
 
 class SlReaderMeta:
@@ -11,10 +11,12 @@ class SlReader:
     header: SlHeader
 
     def __init__(self, filename, **kwargs):
-        self.header = SlHeader()
+        self.fs = open(filename, 'rb')
+        self.header = SlHeader.read(self.fs)
 
     def close(self):
         print('Closing')
+        self.fs.close()
 
     def __iter__(self):
         return self
@@ -23,6 +25,9 @@ class SlReader:
         r"""Reads next block.
 
         :returns:
-            A read block instance or None
+            A read block instance
         """
-        raise StopIteration()
+        block = SlBlock.read(self.fs, self.header.version)
+        if block is None:
+            raise StopIteration()
+        return block
