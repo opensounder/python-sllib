@@ -1,5 +1,7 @@
 import unittest
+import io
 from os import path
+
 import sllib
 
 
@@ -34,7 +36,9 @@ class TestReaderSl2(unittest.TestCase):
                                   'sonar-log-api-testdata.sl3')
 
     def test_header_sl2(self):
-        with sllib.create_reader(self.path_small) as reader:
+
+        with open(self.path_small, 'rb') as f:
+            reader = sllib.Reader(f)
             assert reader
             header = reader.header
             assert header
@@ -46,6 +50,23 @@ class TestReaderSl2(unittest.TestCase):
             assert reader
             assert reader.header.format == 2
             assert reader.header.version == 1
+
+    def test_header_bytes(self):
+        f = io.BytesIO(b'\x02\x00\x00\x00\x80\x0C\x00\x00')
+        header = sllib.Reader(f).header
+        assert header.format == 2
+        assert header.version == 0
+        assert header.framesize == 3200
+
+        f = io.BytesIO(b'\x03\x00\x01\x00\x80\x0B\x00\x00')
+        header = sllib.Reader(f).header
+        assert header.format == 3
+        assert header.version == 1
+        assert header.framesize == 2944
+
+    def test_reader_typerror(self):
+        with self.assertRaises(TypeError):
+            sllib.Reader('some string')
 
     def test_next(self):
         with sllib.create_reader(self.path_small) as reader:

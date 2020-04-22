@@ -7,6 +7,8 @@ class Reader:
     header: Header
 
     def __init__(self, stream: io.BufferedIOBase, **kwargs):
+        if not isinstance(stream, io.BufferedIOBase):
+            raise TypeError("stream is not an instance of io.BufferedIOBase")
         self.fs = stream
         self.header = Header.read(self.fs)
 
