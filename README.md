@@ -10,6 +10,11 @@ Using `pip`
 pip install sllib
 ```
 
+Cloning
+```
+python3 setup.py install
+```
+
 # Usage
 ```
 python3
