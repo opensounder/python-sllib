@@ -1,6 +1,9 @@
 from contextlib import contextmanager
 
 from .reader import Reader  # noqa: F401
+from .frame import Frame
+
+__all__ = ['Frame', 'Reader', 'create_reader']
 
 
 @contextmanager

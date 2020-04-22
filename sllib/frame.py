@@ -1,4 +1,13 @@
 import struct
+import math
+
+__all__ = ['Frame']
+
+KNOTS_KMH = 1.85200
+EARTH_RADIUS = 6356752.3142
+RAD_CONVERSION = 180 / math.pi
+FEET_CONVERSION = 0.3048
+
 F0_FRAME = ()
 
 F2_FRAME = (
@@ -88,21 +97,61 @@ FRAME_FORMATS = (
 
 
 class Frame(object):
+    gps_speed: int = 0
+    lat_enc: int = 0
+    lon_enc: int = 0
+    water_depth: int = 0
+
     def __init__(self, *args, **kwargs):
         for key, value in kwargs.items():
             setattr(self, key, value)
+
+    @property
+    def gps_speed_kph(self):
+        return self.gps_speed * KNOTS_KMH
+
+    @property
+    def longitude(self):
+        return self.lon_enc / EARTH_RADIUS * RAD_CONVERSION
+
+    @property
+    def latitude(self):
+        temp = math.exp(self.lat_enc / EARTH_RADIUS)
+        temp = (2 * math.atan(temp)) - (math.pi / 2)
+        return temp * RAD_CONVERSION
+
+    @property
+    def water_depth_m(self):
+        return self.water_depth * FEET_CONVERSION
+
+    def to_dict(self, format=2):
+        out = {}
+        for i, d in enumerate(FRAME_DEFINITIONS[format]):
+            name = d['name']
+            if not name == '-':
+                if hasattr(self, name):
+                    out[d['name']] = getattr(self, name)
+                else:
+                    out[d['name']] = 0
+        # calculated
+        out['gps_speed_kph'] = self.gps_speed_kph
+        out['longitude'] = self.longitude
+        out['latitude'] = self.latitude
+        out['water_depth_m'] = self.water_depth_m
+        return out
 
     @staticmethod
     def read(filestream, format):
         f = FRAME_FORMATS[format]
         s = struct.calcsize(f)
         buf = filestream.read(s)
-        if buf == '':
+        if buf == b'':
             # EOF
             return None
         if len(buf) < s:
             print(f'This is bad. Only got {len(buf)}/{s} bytes=', buf)
-            return None
+            raise Exception("this is bad")
+
         data = struct.unpack(f, buf)
         kv = {}
         for i, d in enumerate(FRAME_DEFINITIONS[format]):
