@@ -3,7 +3,7 @@ from os import path
 import sllib
 
 
-class TestSl2SlReader(unittest.TestCase):
+class TestSl2Reader(unittest.TestCase):
     def setUp(self):
         self.dirname = path.dirname(path.abspath(__file__))
         self.path_small = path.join(self.dirname,
@@ -24,7 +24,7 @@ class TestSl2SlReader(unittest.TestCase):
             assert header
             assert header.format == 2
             assert header.version == 0
-            assert header.blocksize == 3200
+            assert header.framesize == 3200
 
         with sllib.create_reader(self.path_v1) as reader:
             assert reader
@@ -42,11 +42,11 @@ class TestSl2SlReader(unittest.TestCase):
             assert x.previous_left_sidescan_offset == 0
             assert x.previous_right_sidescan_offset == 0
             assert x.previous_composite_sidescan_offset == 0
-            assert x.blocksize == 3216
-            assert x.previous_blocksize == 0
+            assert x.framesize == 3216
+            assert x.previous_framesize == 0
             assert x.channel == 0
             assert x.packetsize == 3072
-            assert x.block_index == 0
+            assert x.frame_index == 0
             assert x.upper_limit == 0
             assert x.lower_limit == 19.600000381469727
             assert x.frequency == 8
@@ -67,7 +67,7 @@ class TestSl2SlReader(unittest.TestCase):
         with sllib.create_reader(self.path_small) as reader:
             assert reader
             count = 0
-            for block in reader:
+            for frame in reader:
                 count = count + 1
-                assert block
+                assert frame
             assert count == 4017

@@ -1,7 +1,7 @@
 import struct
-F0_BLOCK = ()
+F0_FRAME = ()
 
-F2_BLOCK = (
+F2_FRAME = (
     {'name': 'offset', 'type': 'I'},
     {'name': 'previous_primary_offset', 'type': 'I'},
     {'name': 'previous_secondary_offset', 'type': 'I'},
@@ -9,11 +9,11 @@ F2_BLOCK = (
     {'name': 'previous_left_sidescan_offset', 'type': 'I'},
     {'name': 'previous_right_sidescan_offset', 'type': 'I'},
     {'name': 'previous_composite_sidescan_offset', 'type': 'I'},
-    {'name': 'blocksize', 'type': 'H'},
-    {'name': 'previous_blocksize', 'type': 'H'},
+    {'name': 'framesize', 'type': 'H'},
+    {'name': 'previous_framesize', 'type': 'H'},
     {'name': 'channel', 'type': 'H'},
     {'name': 'packetsize', 'type': 'H'},
-    {'name': 'block_index', 'type': 'I'},
+    {'name': 'frame_index', 'type': 'I'},
     {'name': 'upper_limit', 'type': 'f'},
     {'name': 'lower_limit', 'type': 'f'},
     {'name': '-', 'type': '2s'},
@@ -34,12 +34,12 @@ F2_BLOCK = (
     {'name': '-', 'type': '6s'},
     {'name': 'time1', 'type': 'I'},
 )
-F3_BLOCK = (
+F3_FRAME = (
     {'name': 'offset', 'type': 'I'},
-    {'name': 'blocksize', 'type': 'H'},
-    {'name': 'previous_blocksize', 'type': 'H'},
+    {'name': 'framesize', 'type': 'H'},
+    {'name': 'previous_framesize', 'type': 'H'},
     {'name': 'channel', 'type': 'H'},
-    {'name': 'block_index', 'type': 'I'},
+    {'name': 'frame_index', 'type': 'I'},
     {'name': 'upper_limit', 'type': 'f'},
     {'name': 'lower_limit', 'type': 'f'},
     {'name': '-', 'type': '12s'},
@@ -67,11 +67,11 @@ F3_BLOCK = (
     {'name': 'previous_dc_offset', 'type': 'I'},
 )
 
-BLOCK_DEFINITIONS = (
-    F0_BLOCK,
-    F2_BLOCK,
-    F2_BLOCK,
-    F3_BLOCK,
+FRAME_DEFINITIONS = (
+    F0_FRAME,
+    F2_FRAME,
+    F2_FRAME,
+    F3_FRAME,
 )
 
 
@@ -79,22 +79,22 @@ def build_pattern(pat):
     return "<" + "".join(map(lambda x: x['type'], pat))
 
 
-BLOCK_FORMATS = (
-    build_pattern(BLOCK_DEFINITIONS[0]),
-    build_pattern(BLOCK_DEFINITIONS[1]),
-    build_pattern(BLOCK_DEFINITIONS[2]),
-    build_pattern(BLOCK_DEFINITIONS[3]),
+FRAME_FORMATS = (
+    build_pattern(FRAME_DEFINITIONS[0]),
+    build_pattern(FRAME_DEFINITIONS[1]),
+    build_pattern(FRAME_DEFINITIONS[2]),
+    build_pattern(FRAME_DEFINITIONS[3]),
 )
 
 
-class SlBlock(object):
+class Frame(object):
     def __init__(self, *args, **kwargs):
         for key, value in kwargs.items():
             setattr(self, key, value)
 
     @staticmethod
     def read(filestream, format):
-        f = BLOCK_FORMATS[format]
+        f = FRAME_FORMATS[format]
         s = struct.calcsize(f)
         buf = filestream.read(s)
         if buf == '':
@@ -105,9 +105,9 @@ class SlBlock(object):
             return None
         data = struct.unpack(f, buf)
         kv = {}
-        for i, d in enumerate(BLOCK_DEFINITIONS[format]):
+        for i, d in enumerate(FRAME_DEFINITIONS[format]):
             if not d['name'] == "-":
                 kv[d['name']] = data[i]
-        b = SlBlock(**kv)
+        b = Frame(**kv)
         b.packet = filestream.read(b.packetsize)
         return b
