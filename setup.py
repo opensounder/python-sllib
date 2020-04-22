@@ -7,7 +7,7 @@ setup(
     name='sllib',
     python_requires='>3.6.0',
     version='0.0.1',
-    description='Library for reading Lowrance SLx files',
+    description='Library for reading SLG or SL2 files created by Lowrance fishfinders',
     url='http://github.com/opensounder/python-sllib',
     long_description=long_description,
     long_description_content_type="text/markdown",
