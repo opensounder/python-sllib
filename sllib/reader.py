@@ -1,4 +1,4 @@
-
+import io
 from .header import Header
 from .frame import Frame
 
@@ -6,12 +6,11 @@ from .frame import Frame
 class Reader:
     header: Header
 
-    def __init__(self, filename, **kwargs):
-        self.fs = open(filename, 'rb')
+    def __init__(self, stream: io.BufferedIOBase, **kwargs):
+        self.fs = stream
         self.header = Header.read(self.fs)
 
     def close(self):
-        print('Closing')
         self.fs.close()
 
     def __iter__(self):

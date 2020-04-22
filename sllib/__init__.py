@@ -8,8 +8,8 @@ __all__ = ['Frame', 'Reader', 'create_reader']
 
 @contextmanager
 def create_reader(filename):
-    reader = Reader(filename)
+    f = open(filename, 'rb')
     try:
-        yield reader
+        yield Reader(f)
     finally:
-        reader.close()
+        f.close()

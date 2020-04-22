@@ -2,7 +2,7 @@ import csv
 import sys
 from pathlib import Path
 
-from sllib import create_reader
+from sllib import Reader
 
 FIELDS = ['time1', 'gps_speed', 'gps_speed_kph', 'lon_enc', 'lat_enc',
           'longitude', 'latitude', 'water_depth_m']
@@ -13,10 +13,11 @@ def main():
     name = Path(filename).stem
 
     with open(f'{name}.csv', 'w', newline='') as csvfile:
-        with create_reader(filename) as reader:
-            writer = csv.DictWriter(csvfile, FIELDS, dialect='excel',
-                                    extrasaction='ignore', delimiter=';')
-            writer.writeheader()
+        writer = csv.DictWriter(csvfile, FIELDS, dialect='excel',
+                                extrasaction='ignore', delimiter=';')
+        writer.writeheader()
+        with open(filename, 'rb') as f:
+            reader = Reader(f)
             for frame in reader:
                 writer.writerow(frame.to_dict(fields=FIELDS))
 
