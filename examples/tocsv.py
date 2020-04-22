@@ -1,5 +1,6 @@
-from os import path
 import csv
+import sys
+from pathlib import Path
 
 from sllib import create_reader
 
@@ -8,15 +9,16 @@ FIELDS = ['time1', 'gps_speed', 'gps_speed_kph', 'lon_enc', 'lat_enc',
 
 
 def main():
-    filename = path.join('tests', 'sample-data-lowrance', 'Elite_4_Chirp',
-                         'small.sl2')
+    filename = sys.argv[1]
+    name = Path(filename).stem
 
-    with open('test.csv', 'w') as csvfile:
+    with open(f'{name}.csv', 'w', newline='') as csvfile:
         with create_reader(filename) as reader:
-            writer = csv.DictWriter(csvfile, FIELDS, dialect='excel', extrasaction='ignore')
+            writer = csv.DictWriter(csvfile, FIELDS, dialect='excel',
+                                    extrasaction='ignore', delimiter=';')
             writer.writeheader()
             for frame in reader:
-                writer.writerow(frame.to_dict())
+                writer.writerow(frame.to_dict(fields=FIELDS))
 
 
 if __name__ == "__main__":

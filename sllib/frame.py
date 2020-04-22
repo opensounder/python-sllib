@@ -10,7 +10,7 @@ FEET_CONVERSION = 0.3048
 
 F0_FRAME = ()
 
-F2_FRAME = (
+F1_FRAME = (
     {'name': 'offset', 'type': 'I'},
     {'name': 'previous_primary_offset', 'type': 'I'},
     {'name': 'previous_secondary_offset', 'type': 'I'},
@@ -78,14 +78,19 @@ F3_FRAME = (
 
 FRAME_DEFINITIONS = (
     F0_FRAME,
-    F2_FRAME,
-    F2_FRAME,
+    F1_FRAME,
+    F1_FRAME,
     F3_FRAME,
 )
 
 
-def build_pattern(pat):
-    return "<" + "".join(map(lambda x: x['type'], pat))
+def build_pattern(fdef):
+    return "<" + "".join(map(lambda x: x['type'], fdef))
+
+
+def build_names(fdef):
+    return list(map(lambda x: x['name'],
+                filter(lambda x: x['name'] != '-', fdef)))
 
 
 FRAME_FORMATS = (
@@ -95,12 +100,22 @@ FRAME_FORMATS = (
     build_pattern(FRAME_DEFINITIONS[3]),
 )
 
+FRAME_FIELDS = (
+    build_names(FRAME_DEFINITIONS[0]),
+    build_names(FRAME_DEFINITIONS[1]),
+    build_names(FRAME_DEFINITIONS[2]),
+    build_names(FRAME_DEFINITIONS[3]),
+)
+
+CALCULATED_FIELDS = ['gps_speed_kph', 'longitude', 'latitude', 'water_depth_m']
+
 
 class Frame(object):
     gps_speed: int = 0
     lat_enc: int = 0
     lon_enc: int = 0
     water_depth: int = 0
+    time1: int = 0
 
     def __init__(self, *args, **kwargs):
         for key, value in kwargs.items():
@@ -124,20 +139,17 @@ class Frame(object):
     def water_depth_m(self):
         return self.water_depth * FEET_CONVERSION
 
-    def to_dict(self, format=2):
+    def to_dict(self, format=2, fields=None):
         out = {}
-        for i, d in enumerate(FRAME_DEFINITIONS[format]):
-            name = d['name']
-            if not name == '-':
-                if hasattr(self, name):
-                    out[d['name']] = getattr(self, name)
-                else:
-                    out[d['name']] = 0
-        # calculated
-        out['gps_speed_kph'] = self.gps_speed_kph
-        out['longitude'] = self.longitude
-        out['latitude'] = self.latitude
-        out['water_depth_m'] = self.water_depth_m
+        allfields = FRAME_FIELDS[format] + CALCULATED_FIELDS
+        if fields is not None:
+            allfields = list(filter(lambda x: x in allfields, fields))
+        for name in allfields:
+            if hasattr(self, name):
+                out[name] = getattr(self, name)
+            else:
+                out[name] = 0
+
         return out
 
     @staticmethod
