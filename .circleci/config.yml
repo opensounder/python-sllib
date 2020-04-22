@@ -16,9 +16,7 @@ jobs:
       - run:
           name: Test
           command: |
-            $HOME/.local/bin/coverage run --branch --include="sllib/*" -m unittest discover
-            $HOME/.local/bin/coverage report
-            $HOME/.local/bin/coverage html
+            python -m tox -e py37,py38,coverage
       - store_artifacts:
           path: htmlcov
 
