@@ -6,9 +6,9 @@ from .frame import Frame
 class Reader:
     header: Header
 
-    def __init__(self, stream: io.BufferedIOBase, **kwargs):
-        if not isinstance(stream, io.BufferedIOBase):
-            raise TypeError("stream is not an instance of io.BufferedIOBase")
+    def __init__(self, stream: io.IOBase, **kwargs):
+        if not isinstance(stream, io.IOBase):
+            raise TypeError("stream is not an instance of io.IOBase")
         self.fs = stream
         self.header = Header.read(self.fs)
 

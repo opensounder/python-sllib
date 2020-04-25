@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 setup(
     name='sllib',
     python_requires='>3.6.0',
-    version='0.0.1',
+    version='0.0.2',
     description='Library for reading SLG or SL2 files created by Lowrance fishfinders',
     url='http://github.com/opensounder/python-sllib',
     long_description=long_description,
