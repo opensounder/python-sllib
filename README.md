@@ -4,6 +4,8 @@ Only tested with python 3.6 and 3.7
 
 Git Repostitory and homepage located at https://github.com/opensounder/python-sllib
 
+[![opensounder](https://circleci.com/gh/opensounder/python-sllib.svg?style=svg)](https://circleci.com/gh/opensounder/python-sllib)
+
 # Installation
 Using `pip`
 ```shell
