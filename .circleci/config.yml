@@ -1,7 +1,7 @@
 version: 2.1
 
 orbs:
-  python: circleci/python@1.2.1
+  python: circleci/python@0.2.1
 
 jobs:
   build-and-test:
@@ -10,15 +10,13 @@ jobs:
       - checkout
       - run: git submodule sync
       - run: git submodule update --init
-      - python/install-packages:
-          pkg-manager: pip
-      - python/install-packages:
-          pip-dependency-file: dev-requirements.txt
-          pkg-manager: pip
-      - run:
-          name: Test
-          command: |
-            python -m tox -e py36,py37,coverage
+      - python/load-cache 
+      - python/install-deps 
+      - python/save-cache 
+      - run: 
+          name: Test 
+          command: | 
+            python -m tox -e py37,coverage 
       - store_artifacts:
           path: htmlcov
 
