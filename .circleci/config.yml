@@ -16,7 +16,7 @@ jobs:
       - run:
           name: Test
           command: |
-            python -m tox -e py37,py38,coverage
+            python -m tox -e py36,py37,coverage
       - store_artifacts:
           path: htmlcov
 

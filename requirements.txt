@@ -1,3 +1,3 @@
-tox
-pytest
-coverage
+tox==3.20.1
+pytest==6.1.2
+coverage==5.3
