@@ -10,7 +10,7 @@ Using `pip`
 pip install sllib
 ```
 
-Cloning
+Cloning from git
 ```
 python3 setup.py install
 ```

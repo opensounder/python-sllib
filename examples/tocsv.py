@@ -4,7 +4,7 @@ from pathlib import Path
 
 from sllib import Reader
 
-FIELDS = ['time1', 'gps_speed', 'gps_speed_kph', 'lon_enc', 'lat_enc',
+FIELDS = ['time1', 'framesize', 'gps_speed', 'gps_speed_kph', 'lon_enc', 'lat_enc',
           'longitude', 'latitude', 'water_depth_m']
 
 
@@ -18,6 +18,7 @@ def main():
         writer.writeheader()
         with open(filename, 'rb') as f:
             reader = Reader(f)
+            print(reader.header)
             for frame in reader:
                 writer.writerow(frame.to_dict(fields=FIELDS))
 
