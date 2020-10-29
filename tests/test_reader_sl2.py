@@ -1,8 +1,9 @@
 import unittest
 import io
-from os import path
 
 import sllib
+
+from . import fixtures
 
 
 def doframe(t: unittest.TestCase, curr: sllib.Frame, prev: sllib.Frame):
@@ -22,22 +23,10 @@ def doframe(t: unittest.TestCase, curr: sllib.Frame, prev: sllib.Frame):
 
 
 class TestReaderSl2(unittest.TestCase):
-    def setUp(self):
-        self.dirname = path.dirname(path.abspath(__file__))
-        self.path_small = path.join(self.dirname,
-                                    'sample-data-lowrance',
-                                    'Elite_4_Chirp', 'small.sl2')
-        self.path_v1 = path.join(self.dirname,
-                                 'sample-data-lowrance', 'Elite_4_Chirp',
-                                 'Chart 05_11_2018 [0].sl2')
-
-        self.path_sl3 = path.join(self.dirname,
-                                  'sample-data-lowrance', 'unknown',
-                                  'sonar-log-api-testdata.sl3')
 
     def test_header_sl2(self):
 
-        with open(self.path_small, 'rb') as f:
+        with open(fixtures.SL2_SMALL, 'rb') as f:
             reader = sllib.Reader(f)
             assert reader
             header = reader.header
@@ -46,7 +35,7 @@ class TestReaderSl2(unittest.TestCase):
             assert header.version == 0
             assert header.framesize == 3200
 
-        with sllib.create_reader(self.path_v1) as reader:
+        with sllib.create_reader(fixtures.SL2_V1) as reader:
             assert reader
             assert reader.header.format == 2
             assert reader.header.version == 1
@@ -69,7 +58,7 @@ class TestReaderSl2(unittest.TestCase):
             sllib.Reader('some string')
 
     def test_next(self):
-        with sllib.create_reader(self.path_small) as reader:
+        with sllib.create_reader(fixtures.SL2_SMALL) as reader:
             x = next(reader)
             assert x
             assert x.offset == 8
@@ -101,7 +90,7 @@ class TestReaderSl2(unittest.TestCase):
             assert x.time1 == 5
 
     def test_enumerate(self):
-        with sllib.create_reader(self.path_small) as reader:
+        with sllib.create_reader(fixtures.SL2_SMALL) as reader:
             assert reader
             count = 0
             prev = None
@@ -113,7 +102,7 @@ class TestReaderSl2(unittest.TestCase):
             assert count == 4017
 
     def test_next_v1(self):
-        with sllib.create_reader(self.path_v1) as reader:
+        with sllib.create_reader(fixtures.SL2_V1) as reader:
             x = next(reader)
             assert x
             assert x.offset == 8
@@ -145,7 +134,7 @@ class TestReaderSl2(unittest.TestCase):
             assert x.time1 == 99787
 
     def test_enumerate_v1(self):
-        with sllib.create_reader(self.path_v1) as reader:
+        with sllib.create_reader(fixtures.SL2_V1) as reader:
             assert reader
             count = 0
             prev = None
@@ -154,4 +143,27 @@ class TestReaderSl2(unittest.TestCase):
                 assert frame
                 doframe(self, frame, prev)
                 prev = frame
-            assert count == 27458
+            self.assertEqual(count, 27458)
+
+    def test_southern_hemisphere(self):
+        with sllib.create_reader(fixtures.SL2_SOUTHERN1) as reader:
+            header = reader.header
+            self.assertEqual(header.format, 2)
+            self.assertEqual(header.version, 0)
+            self.assertEqual(header.framesize, 3200)
+            x = next(reader)
+            assert x
+            assert x.offset == 8
+            self.assertEqual(x.previous_primary_offset, 8)
+            self.assertEqual(x.previous_secondary_offset, 0)
+            self.assertEqual(x.previous_downscan_offset, 0)
+            self.assertEqual(x.previous_left_sidescan_offset, 0)
+            self.assertEqual(x.previous_right_sidescan_offset, 0)
+            self.assertEqual(x.previous_composite_sidescan_offset, 0)
+            self.assertEqual(x.framesize, 3216)
+
+            self.assertEqual(x.lon_enc, 12846380)
+            self.assertEqual(x.lat_enc, -3719601)
+
+            self.assertAlmostEqual(x.longitude, 115.78921, 5)
+            self.assertAlmostEqual(x.latitude, -31.76203, 5)
