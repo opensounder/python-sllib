@@ -14,5 +14,3 @@ def create_reader(filename):
         yield Reader(f)
     finally:
         f.close()
-
-
