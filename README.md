@@ -29,7 +29,7 @@ python3
 ...        print(frame.gps_speed)
 
 ```
-
+Or have a look at https://github.com/opensounder/jupyter-notebooks
 
 ## Examples
 ```shell
