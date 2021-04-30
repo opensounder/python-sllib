@@ -36,3 +36,7 @@ jobs:
     - name: Test with pytest
       run: |
         pytest
+    - name: Run some examples
+      run: |
+        python ./examples/totable.py ./tests/sample-data-lowrance/Elite_4_Chirp/small.sl2
+        python ./examples/to_geojson_linestring.py ./tests/sample-data-lowrance/Elite_4_Chirp/small.sl2
