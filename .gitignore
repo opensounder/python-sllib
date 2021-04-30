@@ -109,3 +109,4 @@ venv.bak/
 
 # project specific
 *.csv
+.ipynb_checkpoints/

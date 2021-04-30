@@ -1,4 +1,3 @@
-import csv
 import glob
 import os
 import sys
@@ -9,26 +8,37 @@ from sllib import Reader
 FIELDS = ['time1', 'gps_speed', 'gps_speed_kph', 'lon_enc', 'lat_enc',
           'longitude', 'latitude', 'water_depth_m', 'packetsize']
 
+fmt = "|{:>11}|{:>10}|{:>14}|{:>9}|{:>9}|{:>11}|{:>11}|{:>14}|{:>10}|\n"
+
+
+def fnum(value):
+    if isinstance(value, float):
+        return f'{value:f}'
+    return value
+
+
+# def format_data(row):
+#     return {k: fnum(v) for (k, v) in row.items()}
+
 
 def process_file(filename, outpath):
     name = Path(filename).stem
-    outfile = os.path.join(outpath, f'{name}.csv')
-    with open(outfile, 'w', newline='') as csvfile:
-        writer = csv.DictWriter(csvfile, FIELDS, dialect='excel',
-                                extrasaction='ignore', delimiter='\t')
-        writer.writeheader()
+    outfile = os.path.join(outpath, f'{name}.txt')
+    with open(outfile, 'w', newline='\n') as fil:
+        header = fmt.format(*FIELDS)
+        fil.write(header)
+        fil.write(fmt.replace('>', '->').format(*map(lambda k: '-', FIELDS)))
+
         last = None
         with open(filename, 'rb') as f:
             reader = Reader(f)
             print(reader.header)
-            first = True
+
             for frame in reader:
-                if first:
-                    print(frame.packetsize)
-                    first = False
                 point = (frame.longitude, frame.latitude)
+                values = frame.to_dict(fields=FIELDS)
                 if point != last:
-                    writer.writerow(frame.to_dict(fields=FIELDS))
+                    fil.write(fmt.format(*map(lambda k: fnum(values[k]), FIELDS)))
                     last = point
 
 
