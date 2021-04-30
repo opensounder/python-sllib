@@ -4,6 +4,7 @@ from pathlib import Path
 
 from sllib import Reader
 
+
 def main():
     filename = sys.argv[1]
     name = Path(filename).stem

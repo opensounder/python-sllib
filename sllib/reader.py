@@ -24,7 +24,7 @@ class Reader:
         :returns:
             A read frame instance
         """
-        frame = Frame.read(self.fs, self.header.format)
+        frame = Frame.read(self.fs, self.header.format, self.header.framesize)
         if frame is None:
             raise StopIteration()
         return frame

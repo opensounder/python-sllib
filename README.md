@@ -56,3 +56,8 @@ tox -e py39
 # before committing please run lint and fix any issues
 tox -e lint
 ```
+
+# SLG information
+Besides trial and error
+- https://www.geotech1.com/forums/showthread.php?11159-Lowrance-MCC-saved-data-structure
+- https://www.memotech.franken.de/FileFormats/Navico_SLG_Format.pdf
