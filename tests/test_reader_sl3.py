@@ -11,6 +11,9 @@ class TestReaderSl3(unittest.TestCase):
         self.path_sl3 = path.join(self.dirname,
                                   'sample-data-lowrance', 'other',
                                   'sonar-log-api-testdata.sl3')
+        self.path_sl3_v2 = path.join(
+            self.dirname, 'sample-data-lowrance', 'other',
+            'format3_version2.sl3')
 
     def test_header_sl3(self):
         with sllib.create_reader(self.path_sl3) as reader:
@@ -47,7 +50,7 @@ class TestReaderSl3(unittest.TestCase):
             self.assertAlmostEqual(x.heading_deg, 78.98, 1)
             self.assertEqual(x.flags, 950)  # TODO: Validate !!!
 
-    def test_read_all(self):
+    def test_read_all_v1(self):
         with sllib.create_reader(self.path_sl3) as reader:
             header = reader.header
             self.assertEqual(header.format, 3)
@@ -62,7 +65,7 @@ class TestReaderSl3(unittest.TestCase):
             }
             for frame in reader:
                 count += 1
-                if frame.has_packet:
+                if frame.channel <= 5:
                     goodCount += 1
                 # space
                 self.assertGreaterEqual(frame.longitude, box['lon']['min'])
@@ -76,8 +79,44 @@ class TestReaderSl3(unittest.TestCase):
                 self.assertLessEqual(frame.channel, 9)
                 self.assertLessEqual(frame.frequency, 10)
 
-            self.assertEqual(count, 10124)
-            self.assertEqual(goodCount, 7626)
+            self.assertEqual(count, 8691)
+            self.assertEqual(goodCount, 6228)
 
             filesize = os.path.getsize(self.path_sl3)
+            self.assertEqual(reader.tell(), filesize)
+
+    def test_read_all_v2(self):
+        filename = self.path_sl3_v2
+        with sllib.create_reader(filename) as reader:
+            header = reader.header
+            self.assertEqual(header.format, 3)
+            self.assertEqual(header.version, 2)
+            count = 0
+            goodCount = 0
+
+            box = {
+                'lon': {'min': -91.2444, 'max': -91.24243771237497},
+                'lat': {'min': 29.654006, 'max': 29.657156827530574},
+                'depth': {'min': 3.0, 'max': 13.0}
+            }
+            for frame in reader:
+                count += 1
+                if frame.channel <= 5:
+                    goodCount += 1
+                # space
+                self.assertGreaterEqual(frame.longitude, box['lon']['min'])
+                self.assertLessEqual(frame.longitude, box['lon']['max'])
+                self.assertGreaterEqual(frame.latitude, box['lat']['min'])
+                self.assertLessEqual(frame.latitude, box['lat']['max'])
+                # self.assertGreaterEqual(frame.water_depth_m, box['depth']['min'])
+                # self.assertLessEqual(frame.water_depth_m, box['depth']['max'])
+
+                # channels
+                self.assertLessEqual(frame.channel, 9)
+                self.assertLessEqual(frame.frequency, 10)
+
+            self.assertEqual(count, 32768)
+            self.assertEqual(goodCount, 16384)
+
+            filesize = os.path.getsize(filename)
             self.assertEqual(reader.tell(), filesize)

@@ -18,13 +18,13 @@ def create_csv_with_header(csvfile, fields):
     return writer
 
 
-def process_file(filename, outpath, all):
+def process_file(filename, outpath, all, strict):
     name = Path(filename).stem
     outfile = os.path.join(outpath, f'{name}.csv.tab')
     with open(outfile, 'w', newline='') as csvfile:
         last = None
         with open(filename, 'rb') as f:
-            reader = Reader(f)
+            reader = Reader(f, strict=strict)
             print(filename, reader.header)
             fields = reader.header.fields
             writer = create_csv_with_header(csvfile,  fields)
@@ -37,18 +37,18 @@ def process_file(filename, outpath, all):
                     last = point
 
 
-def main(path, all):
+def main(path, all, strict):
     print(f'Testing {path} to see what it is')
     if os.path.isfile(path):
         print('You provided a file.')
-        process_file(path, os.path.dirname(path), all)
+        process_file(path, os.path.dirname(path), all, strict)
     elif os.path.isdir(path):
         pattern = os.path.join(path, '*.sl*')
         print('You provided a directory.')
         print("Will try to glob " + pattern)
         for filename in glob.iglob(pattern):
             print(filename)
-            process_file(filename, path)
+            process_file(filename, path, all, strict)
     else:
         print(f'Error! You must provide a file or directory. "{path}" is neither.')
 
@@ -61,6 +61,11 @@ if __name__ == "__main__":
         help="store all records even if position is unchanged",
         action='store_true')
     parser.add_argument(
+        '-s', '--strict',
+        help="enable strict interpretation",
+        action='store_true'
+    )
+    parser.add_argument(
         '-v', '--verbose',
         help="show verbose debug logging",
         action='store_true'
@@ -69,4 +74,4 @@ if __name__ == "__main__":
     if args.verbose:
         logging.basicConfig(level=logging.DEBUG)
         # logging.setLevel(level=logging.DEBUG)
-    main(args.path, args.all)
+    main(args.path, args.all, args.strict)

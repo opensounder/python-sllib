@@ -1,3 +1,4 @@
+from typing import List
 import struct
 import math
 import io
@@ -10,6 +11,8 @@ from sllib.definitions import (
     KNOTS_KMH, RAD_CONVERSION
 )
 # from .debug import print_attributes
+
+FLAG_AS_BINARY = False  # Format to show flags in. Binary is usefull for debugging
 
 __all__ = ['Frame']
 
@@ -63,51 +66,21 @@ class Frame(object):
         return out
 
     @staticmethod
-    def read(stream: io.IOBase, format: int, blocksize: int = 0):
-        if format == 1:
+    def read(stream: io.IOBase, format: List[int], blocksize: int = 0, strict: bool = False):
+        if not isinstance(format, list):
+            raise TypeError('format must be a list')
+
+        if format[0] == 1:
             # slg is a conditional format for each packet... yuck
             return _readSlg(stream, blocksize)
-        if format == 2:
-            return _readSlx(stream, blocksize, 2)
-        if format == 3:
-            return _readSlx(stream, blocksize, 3)
-
-        f = FRAME_FORMATS[format]
-        s = struct.calcsize(f)
-        here = stream.tell()
-        while True:
-            buf = stream.read(s)
-            if buf == b'':
-                # EOF
-                return None
-            if len(buf) < s:
-                print(f'This is bad. Only got {len(buf)}/{s} bytes=', buf)
-                raise Exception("this is bad")
-            data = struct.unpack(f, buf)
-            if data[0] == here:  # offset is allways first
-                break
-            elif here > 0:
-                # jump forward and try to catch next
-                here += 1
-                stream.seek(here)
-                continue
-            else:
-                raise Exception('location does not match expected offset')
-
-        kv = {'headersize': s}
-        for i, d in enumerate(FRAME_DEFINITIONS[format]):
-            name = d['name']
-            if not name == "-":
-                kv[name] = data[i]
-
-        b = Frame(**kv)
-        # print('packet at', filestream.tell(), b.to_dict(format=format, fields=['offset', 'packetsize', 'longitude']))
-        b.packet = stream.read(b.packetsize)
-        # print('post packet offset:', filestream.tell())
-        return b
+        if format[0] == 2:
+            return _readSl2(stream, blocksize, 2)
+        if format[0] == 3:
+            return _readSlx(stream, blocksize, strict=strict, format=format)
+        raise Exception('unkown format')
 
 
-def _readSlx(stream: io.IOBase, blocksize: int, format: int) -> Frame:
+def _readSl2(stream: io.IOBase, blocksize: int, format: List[int]) -> Frame:
     f = FRAME_FORMATS[format]
     s = struct.calcsize(f)
     here = stream.tell()
@@ -142,20 +115,69 @@ def _readSlx(stream: io.IOBase, blocksize: int, format: int) -> Frame:
         if not name == "-":
             kv[name] = data[i]
             if name == 'flags' and FLAG_FORMATS[format]:
+                if FLAG_AS_BINARY:
+                    kv[name] = f'({kv[name]}) {kv[name]:016b}'
                 flagform = FLAG_FORMATS[format]
                 flags = data[i]
                 for k, v in flagform.items():
                     kv[k] = flags & v == v
     b = Frame(**kv)
-    if b.has_packet:
-        b.packet = stream.read(b.packetsize)
-    else:
-        logger.debug(
-            'frame with bad packet. offset: %s channel: %s, index: %s',
-            b.offset, b.channel, b.frame_index
-        )
-        stream.read(b.framesize - s)
-    # print('post packet offset:', filestream.tell())
+    b.packet = stream.read(b.packetsize)
+    return b
+
+
+def _readSlx(stream: io.IOBase, blocksize: int, format: List[int], strict: bool) -> Frame:
+    fform = format[0]
+    # fver = format[1]
+    f = FRAME_FORMATS[fform]
+    s = struct.calcsize(f)
+    here = stream.tell()
+    bad = 0
+    while True:
+        buf = stream.read(s)
+        if buf == b'':
+            # EOF
+            return None
+        if len(buf) < s:
+            print(f'This is bad. Only got {len(buf)}/{s} bytes=', buf)
+            raise Exception("this is bad")
+        data = struct.unpack(f, buf)
+        if data[0] == here:  # offset is always first value
+            if bad > 1:
+                logger.warn('got back at offset: %s', here)
+            break
+        elif here > 0:
+            bad += 1
+            if bad == 1:
+                logger.warn('unexpected offset at offset: %s. will try to find next frame', here)
+            if strict:
+                raise Exception('offset missmatch')
+            # jump forward and try to catch next
+            here += 1
+            stream.seek(here)
+            continue
+        else:
+            raise Exception('location does not match expected offset')
+
+    kv = {'headersize': s}
+    for i, d in enumerate(FRAME_DEFINITIONS[fform]):
+        name = d['name']
+        if not name == "-":
+            kv[name] = data[i]
+            if name == 'flags' and FLAG_FORMATS[fform]:
+                if FLAG_AS_BINARY:
+                    kv[name] = f'({kv[name]}) {kv[name]:016b}'
+                flagform = FLAG_FORMATS[fform]
+                flags = data[i]
+                for k, v in flagform.items():
+                    kv[k] = flags & v == v
+    b = Frame(**kv)
+    if b.channel <= 5:
+        extra = 168-s
+        # logger.debug('low channel. reading extra %d bytes', extra)
+        stream.read(extra)
+    b.packet = stream.read(b.packetsize)
+
     return b
 
 

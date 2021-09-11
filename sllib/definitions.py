@@ -61,8 +61,9 @@ F2_FRAME = (
 # H = ushort(2), I= uint(4)
 F3_FRAME = (
     {'name': 'offset', 'type': 'I'},
-    {'name': 'a', 'type': 'H'},
-    {'name': 'b', 'type': 'H'},
+    # {'name': 'a', 'type': 'H'},
+    # {'name': 'b', 'type': 'H'},
+    {'name': '-', 'type': 'I'},
     {'name': 'framesize', 'type': 'H'},
     {'name': 'previous_framesize', 'type': 'H'},
     # {'name': 'framesize', 'type': 'I'},
@@ -88,7 +89,7 @@ F3_FRAME = (
     {'name': 'flags', 'type': 'H'},
     {'name': '-', 'type': '6s'},
     {'name': 'time1', 'type': 'I'},
-    {'name': '-', 'type': '40s'}
+    # {'name': '-', 'type': '40s'}
 )
 
 F2_FLAGS = {
@@ -105,12 +106,15 @@ F2_FLAGS = {
 F3_FLAGS = {
     'has_altitude':    0x0200,
     'has_heading':     0x0100,
+    #
     'has_track':       0x0080,
     'has_water_speed': 0x0040,
     'has_position':    0x0010,
-    'has_packet':      0x0008,
+    #
+    'has_tbd1':      0x0008,
     'has_temperature': 0x0004,
     'has_gps_speed':   0x0002,
+    #
 }
 
 
