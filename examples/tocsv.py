@@ -3,8 +3,11 @@ import glob
 import os
 from pathlib import Path
 import argparse
+import logging
 
 from sllib import Reader
+
+logger = logging.getLogger(__name__)
 
 
 def create_csv_with_header(csvfile, fields):
@@ -28,7 +31,9 @@ def process_file(filename, outpath, all):
             for frame in reader:
                 point = (frame.longitude, frame.latitude)
                 if all or point != last:
-                    writer.writerow(frame.to_dict(fields=fields, format=reader.header.format))
+                    dct = frame.to_dict(fields=fields, format=reader.header.format)
+                    # dct['x'] = frame.offset + frame.packetsize + frame.headersize
+                    writer.writerow(dct)
                     last = point
 
 
@@ -55,6 +60,13 @@ if __name__ == "__main__":
         '-a', '--all',
         help="store all records even if position is unchanged",
         action='store_true')
+    parser.add_argument(
+        '-v', '--verbose',
+        help="show verbose debug logging",
+        action='store_true'
+    )
     args = parser.parse_args()
-    print(args)
+    if args.verbose:
+        logging.basicConfig(level=logging.DEBUG)
+        # logging.setLevel(level=logging.DEBUG)
     main(args.path, args.all)

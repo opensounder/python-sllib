@@ -6,6 +6,9 @@ Git Repostitory and homepage located at https://github.com/opensounder/python-sl
 
 ![example workflow](https://github.com/opensounder/python-sllib/actions/workflows/python-package.yml/badge.svg)
 
+Until version 1.x.y every change to x will be a possible breaking change.
+Otherwise it should follow samever versioning principles.
+
 # Installation
 Using `pip`
 ```shell

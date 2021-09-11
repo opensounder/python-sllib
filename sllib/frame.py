@@ -2,133 +2,18 @@ import struct
 import math
 import io
 from typing import Tuple
+import logging
+
+from sllib.definitions import (
+    CALCULATED_FIELDS, EARTH_RADIUS, FEET_CONVERSION, FLAG_FORMATS,
+    FRAME_DEFINITIONS, FRAME_FIELDS, FRAME_FORMATS,
+    KNOTS_KMH, RAD_CONVERSION
+)
 # from .debug import print_attributes
 
 __all__ = ['Frame']
 
-KNOTS_KMH = 1.85200
-EARTH_RADIUS = 6356752.3142
-RAD_CONVERSION = 180 / math.pi
-FEET_CONVERSION = 0.3048
-
-F0_FRAME = ()
-# B=byte, H=ushort, h=short, I=uint, i=int, f=float
-F1_FRAME = (
-    # {'name': 'flags', 'type': 'H'},
-    # {'name': 'lower_limit', 'type': 'f'},
-    # {'name': 'water_depth', 'type': 'f'},
-    # {'name': 'temperature', 'type': 'f'},
-    # {'name': 'water_speed', 'type': 'f'},
-    # {'name': 'lon_enc', 'type': 'i'},
-    # {'name': 'lat_enc', 'type': 'i'},
-    # {'name': 'surface_depth', 'type': 'f'},
-    # {'name': 'top_of_bottom', 'type': 'f'},
-    # {'name': 'temperature2', 'type': 'f'},
-    # {'name': 'temperature3', 'type': 'f'},
-    # {'name': 'time1', 'type': 'I'},
-    # {'name': 'gps_speed', 'type': 'f'},
-    # {'name': 'heading', 'type': 'f'},
-    # {'name': 'altitude', 'type': 'f'},
-    # {'name': 'packetsize', 'type': 'H'},
-)
-F2_FRAME = (
-    {'name': 'offset', 'type': 'I'},
-    {'name': 'previous_primary_offset', 'type': 'I'},
-    {'name': 'previous_secondary_offset', 'type': 'I'},
-    {'name': 'previous_downscan_offset', 'type': 'I'},
-    {'name': 'previous_left_sidescan_offset', 'type': 'I'},
-    {'name': 'previous_right_sidescan_offset', 'type': 'I'},
-    {'name': 'previous_composite_sidescan_offset', 'type': 'I'},
-    {'name': 'framesize', 'type': 'H'},
-    {'name': 'previous_framesize', 'type': 'H'},
-    {'name': 'channel', 'type': 'H'},
-    {'name': 'packetsize', 'type': 'H'},
-    {'name': 'frame_index', 'type': 'I'},
-    {'name': 'upper_limit', 'type': 'f'},
-    {'name': 'lower_limit', 'type': 'f'},
-    {'name': '-', 'type': '2s'},
-    {'name': 'frequency', 'type': 'B'},
-    {'name': '-', 'type': '13s'},
-    {'name': 'water_depth', 'type': 'f'},
-    {'name': 'keel_depth', 'type': 'f'},
-    {'name': '-', 'type': '28s'},
-    {'name': 'gps_speed', 'type': 'f'},
-    {'name': 'temperature', 'type': 'f'},
-    {'name': 'lon_enc', 'type': 'i'},
-    {'name': 'lat_enc', 'type': 'i'},
-    {'name': 'water_speed', 'type': 'f'},
-    {'name': 'course', 'type': 'f'},
-    {'name': 'altitude', 'type': 'f'},
-    {'name': 'heading', 'type': 'f'},
-    {'name': 'flags', 'type': 'H'},
-    {'name': '-', 'type': '6s'},
-    {'name': 'time1', 'type': 'I'},
-)
-F3_FRAME = (
-    {'name': 'offset', 'type': 'I'},
-    {'name': 'framesize', 'type': 'H'},
-    {'name': 'previous_framesize', 'type': 'H'},
-    {'name': 'channel', 'type': 'H'},
-    {'name': 'frame_index', 'type': 'I'},
-    {'name': 'upper_limit', 'type': 'f'},
-    {'name': 'lower_limit', 'type': 'f'},
-    {'name': '-', 'type': '12s'},
-    {'name': 'created_at', 'type': 'I'},
-    {'name': 'packetsize', 'type': 'H'},
-    {'name': 'water_depth', 'type': 'f'},
-    {'name': 'frequency', 'type': 'B'},
-    {'name': 'gps_speed', 'type': 'f'},
-    {'name': 'temperature', 'type': 'f'},
-    {'name': 'lon_enc', 'type': 'i'},
-    {'name': 'lat_enc', 'type': 'i'},
-    {'name': 'water_speed', 'type': 'f'},
-    {'name': 'course', 'type': 'f'},
-    {'name': 'altitude', 'type': 'f'},
-    {'name': 'heading', 'type': 'f'},
-    {'name': 'flags', 'type': 'H'},
-    {'name': 'time1', 'type': 'I'},
-    {'name': 'previous_primary_offset', 'type': 'I'},
-    {'name': 'previous_secondary_offset', 'type': 'I'},
-    {'name': 'previous_downscan_offset', 'type': 'I'},
-    {'name': 'previous_left_sidescan_offset', 'type': 'I'},
-    {'name': 'previous_right_sidescan_offset', 'type': 'I'},
-    {'name': 'previous_composite_sidescan_offset', 'type': 'I'},
-    {'name': '-', 'type': '12s'},
-    {'name': 'previous_dc_offset', 'type': 'I'},
-)
-
-FRAME_DEFINITIONS = (
-    F0_FRAME,
-    F1_FRAME,
-    F2_FRAME,
-    F3_FRAME,
-)
-
-
-def build_pattern(fdef):
-    return "<" + "".join(map(lambda x: x['type'], fdef))
-
-
-def build_names(fdef):
-    return list(map(lambda x: x['name'],
-                filter(lambda x: x['name'] != '-', fdef)))
-
-
-FRAME_FORMATS = (
-    build_pattern(FRAME_DEFINITIONS[0]),
-    build_pattern(FRAME_DEFINITIONS[1]),
-    build_pattern(FRAME_DEFINITIONS[2]),
-    build_pattern(FRAME_DEFINITIONS[3]),
-)
-
-FRAME_FIELDS = (
-    build_names(FRAME_DEFINITIONS[0]),
-    build_names(FRAME_DEFINITIONS[1]),
-    build_names(FRAME_DEFINITIONS[2]),
-    build_names(FRAME_DEFINITIONS[3]),
-)
-
-CALCULATED_FIELDS = ['gps_speed_kph', 'longitude', 'latitude', 'water_depth_m']
+logger = logging.getLogger(__name__)
 
 
 class Frame(object):
@@ -143,7 +28,7 @@ class Frame(object):
             setattr(self, key, value)
 
     @property
-    def heading_dec(self):
+    def heading_deg(self):
         return self.heading * RAD_CONVERSION
 
     @property
@@ -178,29 +63,100 @@ class Frame(object):
         return out
 
     @staticmethod
-    def read(filestream: io.IOBase, format: int, blocksize: int = 0):
+    def read(stream: io.IOBase, format: int, blocksize: int = 0):
         if format == 1:
             # slg is a conditional format for each packet... yuck
-            return _readSlg(filestream, blocksize)
+            return _readSlg(stream, blocksize)
+        if format == 2:
+            return _readSlx(stream, blocksize, 2)
+        if format == 3:
+            return _readSlx(stream, blocksize, 3)
 
         f = FRAME_FORMATS[format]
         s = struct.calcsize(f)
-        buf = filestream.read(s)
+        here = stream.tell()
+        while True:
+            buf = stream.read(s)
+            if buf == b'':
+                # EOF
+                return None
+            if len(buf) < s:
+                print(f'This is bad. Only got {len(buf)}/{s} bytes=', buf)
+                raise Exception("this is bad")
+            data = struct.unpack(f, buf)
+            if data[0] == here:  # offset is allways first
+                break
+            elif here > 0:
+                # jump forward and try to catch next
+                here += 1
+                stream.seek(here)
+                continue
+            else:
+                raise Exception('location does not match expected offset')
+
+        kv = {'headersize': s}
+        for i, d in enumerate(FRAME_DEFINITIONS[format]):
+            name = d['name']
+            if not name == "-":
+                kv[name] = data[i]
+
+        b = Frame(**kv)
+        # print('packet at', filestream.tell(), b.to_dict(format=format, fields=['offset', 'packetsize', 'longitude']))
+        b.packet = stream.read(b.packetsize)
+        # print('post packet offset:', filestream.tell())
+        return b
+
+
+def _readSlx(stream: io.IOBase, blocksize: int, format: int) -> Frame:
+    f = FRAME_FORMATS[format]
+    s = struct.calcsize(f)
+    here = stream.tell()
+    bad = 0
+    while True:
+        buf = stream.read(s)
         if buf == b'':
             # EOF
             return None
         if len(buf) < s:
             print(f'This is bad. Only got {len(buf)}/{s} bytes=', buf)
             raise Exception("this is bad")
-
         data = struct.unpack(f, buf)
-        kv = {}
-        for i, d in enumerate(FRAME_DEFINITIONS[format]):
-            if not d['name'] == "-":
-                kv[d['name']] = data[i]
-        b = Frame(**kv)
-        b.packet = filestream.read(b.packetsize)
-        return b
+        if data[0] == here:  # offset is allways first
+            if bad > 1:
+                logger.warn('got back at offset: %s', here)
+            break
+        elif here > 0:
+            bad += 1
+            if bad == 1:
+                logger.warn('unexpected offset at offset: %s. will try to find next frame', here)
+            # jump forward and try to catch next
+            here += 1
+            stream.seek(here)
+            continue
+        else:
+            raise Exception('location does not match expected offset')
+
+    kv = {'headersize': s}
+    for i, d in enumerate(FRAME_DEFINITIONS[format]):
+        name = d['name']
+        if not name == "-":
+            kv[name] = data[i]
+            if name == 'flags' and FLAG_FORMATS[format]:
+                flagform = FLAG_FORMATS[format]
+                flags = data[i]
+                for k, v in flagform.items():
+                    kv[k] = flags & v == v
+    b = Frame(**kv)
+    if b.has_packet:
+        b.packet = stream.read(b.packetsize)
+    else:
+        logger.debug(
+            'frame with bad packet. offset: %s channel: %s, index: %s',
+            b.offset, b.channel, b.frame_index
+        )
+        stream.read(b.framesize - s)
+    # print('post packet offset:', filestream.tell())
+    return b
 
 
 def _readSlg(fs: io.IOBase, blocksize: int) -> Frame:

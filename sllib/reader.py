@@ -1,6 +1,9 @@
 import io
+import logging
 from .header import Header
 from .frame import Frame
+
+logger = logging.getLogger(__name__)
 
 
 class Reader:
@@ -14,6 +17,12 @@ class Reader:
 
     def close(self):
         self.fs.close()
+
+    def read(self, size):
+        self.fs.read(size)
+
+    def tell(self) -> int:
+        return self.fs.tell()
 
     def __iter__(self):
         return self
