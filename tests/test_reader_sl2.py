@@ -92,6 +92,7 @@ class TestReaderSl2(unittest.TestCase):
     def test_enumerate(self):
         with sllib.create_reader(fixtures.SL2_SMALL) as reader:
             assert reader
+            self.assertEqual(reader.header.version, 0)
             count = 0
             prev = None
             for frame in reader:
