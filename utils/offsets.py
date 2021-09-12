@@ -81,7 +81,6 @@ def main(filename, maxcount):
             print(f'wrote {count} records to {outfile}')
 
 
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('path', help="path to file to test")
