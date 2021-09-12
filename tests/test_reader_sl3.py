@@ -59,7 +59,7 @@ class TestReaderSl3(unittest.TestCase):
             self.assertEqual(header.version, 1)
             count = 0
             goodCount = 0
-
+            channelcounts = [0] * 10
             box = {
                 'lon': {'min': 36.48355597526586, 'max': 36.48649433485548},
                 'lat': {'min': 56.59505156603242, 'max': 56.59533938054592},
@@ -69,6 +69,7 @@ class TestReaderSl3(unittest.TestCase):
                 count += 1
                 if frame.has_tbd1:
                     goodCount += 1
+                channelcounts[frame.channel] += 1
                 # space
                 self.assertGreaterEqual(frame.longitude, box['lon']['min'])
                 self.assertLessEqual(frame.longitude, box['lon']['max'])
@@ -83,6 +84,16 @@ class TestReaderSl3(unittest.TestCase):
 
             self.assertEqual(count, 10124, 'wrong number of frames')
             self.assertEqual(goodCount, 7626, 'wrong number of frames with flag set')
+            self.assertEqual(channelcounts[0], 2793, 'channel 0')
+            self.assertEqual(channelcounts[1], 0, 'channel 1')
+            self.assertEqual(channelcounts[2], 2416, 'channel 2')
+            self.assertEqual(channelcounts[3], 0, 'channel 3')
+            self.assertEqual(channelcounts[4], 0, 'channel 4')
+            self.assertEqual(channelcounts[5], 2417, 'channel 5')
+            self.assertEqual(channelcounts[6], 0, 'channel 6')
+            self.assertEqual(channelcounts[7], 0, 'channel 7')
+            self.assertEqual(channelcounts[8], 0, 'channel 8')
+            self.assertEqual(channelcounts[9], 2498, 'channel 9')
 
             filesize = os.path.getsize(self.path_sl3)
             self.assertEqual(reader.tell(), filesize)
@@ -95,7 +106,7 @@ class TestReaderSl3(unittest.TestCase):
             self.assertEqual(header.version, 2)
             count = 0
             goodCount = 0
-
+            channelcounts = [0] * 10
             box = {
                 'lon': {'min': -91.2444, 'max': -91.24243771237497},
                 'lat': {'min': 29.654006, 'max': 29.657156827530574},
@@ -105,6 +116,7 @@ class TestReaderSl3(unittest.TestCase):
                 count += 1
                 if frame.channel <= 5:
                     goodCount += 1
+                channelcounts[frame.channel] += 1
                 # space
                 self.assertGreaterEqual(frame.longitude, box['lon']['min'])
                 self.assertLessEqual(frame.longitude, box['lon']['max'])
@@ -119,6 +131,16 @@ class TestReaderSl3(unittest.TestCase):
 
             self.assertEqual(count, 32768)
             self.assertEqual(goodCount, 16384)
+            self.assertEqual(channelcounts[0], 4096, 'channel 0')
+            self.assertEqual(channelcounts[1], 4096, 'channel 1')
+            self.assertEqual(channelcounts[2], 4096, 'channel 2')
+            self.assertEqual(channelcounts[3], 0, 'channel 3')
+            self.assertEqual(channelcounts[4], 0, 'channel 4')
+            self.assertEqual(channelcounts[5], 4096, 'channel 5')
+            self.assertEqual(channelcounts[6], 0, 'channel 6')
+            self.assertEqual(channelcounts[7], 8192, 'channel 7')
+            self.assertEqual(channelcounts[8], 8192, 'channel 8')
+            self.assertEqual(channelcounts[9], 0, 'channel 9')
 
             filesize = os.path.getsize(filename)
             self.assertEqual(reader.tell(), filesize)
