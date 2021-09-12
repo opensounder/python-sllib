@@ -32,7 +32,6 @@ def process_file(filename, outpath, all, strict):
                 point = (frame.longitude, frame.latitude)
                 if all or point != last:
                     dct = frame.to_dict(fields=fields, format=reader.header.format)
-                    # dct['x'] = frame.offset + frame.packetsize + frame.headersize
                     writer.writerow(dct)
                     last = point
 
