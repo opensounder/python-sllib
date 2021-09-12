@@ -23,6 +23,8 @@ class TestReaderSl3(unittest.TestCase):
             assert header.format == 3
             assert header.version == 1
             assert header.framesize == 3200
+            fields = reader.fields
+            self.assertIn('channel', fields)
 
     def test_first(self):
         with sllib.create_reader(self.path_sl3) as reader:
@@ -120,3 +122,24 @@ class TestReaderSl3(unittest.TestCase):
 
             filesize = os.path.getsize(filename)
             self.assertEqual(reader.tell(), filesize)
+
+    def test_filter_channels(self):
+        with sllib.create_reader(self.path_sl3_v2) as reader:
+            reader.add_filter(channels=[9])
+            for frame in reader:
+                self.assertEqual(frame.channel, 9)
+
+        with sllib.create_reader(self.path_sl3_v2) as reader:
+            reader.add_filter(channels=[1, 9])
+            for frame in reader:
+                self.assertIn(frame.channel, [1, 9])
+
+    def test_filter_flags(self):
+        with sllib.create_reader(self.path_sl3_v2) as reader:
+            reader.add_filter(flags=702)
+            count = 0
+            for frame in reader:
+                self.assertEqual(frame.flags, 702)
+                count += 1
+
+        self.assertEqual(count, 28672)

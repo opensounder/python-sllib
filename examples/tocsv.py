@@ -26,7 +26,7 @@ def process_file(filename, outpath, all, strict):
         with open(filename, 'rb') as f:
             reader = Reader(f, strict=strict)
             print(filename, reader.header)
-            fields = reader.header.fields
+            fields = reader.fields
             writer = create_csv_with_header(csvfile,  fields)
             for frame in reader:
                 point = (frame.longitude, frame.latitude)

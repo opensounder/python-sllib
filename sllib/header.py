@@ -1,7 +1,5 @@
-from typing import List
 import struct
 import logging
-from sllib.definitions import CALCULATED_FIELDS, FRAME_FIELDS
 
 logger = logging.getLogger(__name__)
 
@@ -17,11 +15,6 @@ class Header(object):
         self.version = version
         self.framesize = framesize
         self.debug = debug
-
-    @property
-    def fields(self) -> List[str]:
-        """generate a list of fieldnames for current format"""
-        return FRAME_FIELDS[self.format] + CALCULATED_FIELDS
 
     def __str__(self):
         return (f'<Header(format={self.format}, version={self.version}, ' +
