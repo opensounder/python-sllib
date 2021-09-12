@@ -27,7 +27,7 @@ class TestReaderSl3(unittest.TestCase):
             self.assertIn('channel', fields)
 
     def test_first(self):
-        with sllib.create_reader(self.path_sl3) as reader:
+        with sllib.create_reader(self.path_sl3, True) as reader:
             header = reader.header
             self.assertEqual(header.format, 3)
             x = next(reader)
@@ -53,7 +53,7 @@ class TestReaderSl3(unittest.TestCase):
             self.assertEqual(x.flags, 950)  # TODO: Validate !!!
 
     def test_read_all_v1(self):
-        with sllib.create_reader(self.path_sl3) as reader:
+        with sllib.create_reader(self.path_sl3, True) as reader:
             header = reader.header
             self.assertEqual(header.format, 3)
             self.assertEqual(header.version, 1)
@@ -67,7 +67,7 @@ class TestReaderSl3(unittest.TestCase):
             }
             for frame in reader:
                 count += 1
-                if frame.channel <= 5:
+                if frame.has_tbd1:
                     goodCount += 1
                 # space
                 self.assertGreaterEqual(frame.longitude, box['lon']['min'])
@@ -81,15 +81,15 @@ class TestReaderSl3(unittest.TestCase):
                 self.assertLessEqual(frame.channel, 9)
                 self.assertLessEqual(frame.frequency, 10)
 
-            self.assertEqual(count, 8691)
-            self.assertEqual(goodCount, 6228)
+            self.assertEqual(count, 10124, 'wrong number of frames')
+            self.assertEqual(goodCount, 7626, 'wrong number of frames with flag set')
 
             filesize = os.path.getsize(self.path_sl3)
             self.assertEqual(reader.tell(), filesize)
 
     def test_read_all_v2(self):
         filename = self.path_sl3_v2
-        with sllib.create_reader(filename) as reader:
+        with sllib.create_reader(filename, strict=True) as reader:
             header = reader.header
             self.assertEqual(header.format, 3)
             self.assertEqual(header.version, 2)

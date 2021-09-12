@@ -66,21 +66,22 @@ class Frame(object):
         return out
 
     @staticmethod
-    def read(stream: io.IOBase, format: List[int], blocksize: int = 0, strict: bool = False):
-        if not isinstance(format, list):
+    def read(stream: io.IOBase, formver: List[int], blocksize: int = 0, strict: bool = False):
+        if not isinstance(formver, list):
             raise TypeError('format must be a list')
 
-        if format[0] == 1:
+        if formver[0] == 1:
             # slg is a conditional format for each packet... yuck
             return _readSlg(stream, blocksize)
-        if format[0] == 2:
-            return _readSl2(stream, blocksize, 2)
-        if format[0] == 3:
-            return _readSlx(stream, blocksize, strict=strict, format=format)
+        if formver[0] == 2:
+            return _readSl2(stream, blocksize, formver)
+        if formver[0] == 3:
+            return _readSlx(stream, blocksize, strict=strict, formver=formver)
         raise Exception('unkown format')
 
 
-def _readSl2(stream: io.IOBase, blocksize: int, format: List[int]) -> Frame:
+def _readSl2(stream: io.IOBase, blocksize: int, formver: List[int]) -> Frame:
+    format = formver[0]
     f = FRAME_FORMATS[format]
     s = struct.calcsize(f)
     here = stream.tell()
@@ -126,10 +127,10 @@ def _readSl2(stream: io.IOBase, blocksize: int, format: List[int]) -> Frame:
     return b
 
 
-def _readSlx(stream: io.IOBase, blocksize: int, format: List[int], strict: bool) -> Frame:
-    fform = format[0]
-    # fver = format[1]
-    f = FRAME_FORMATS[fform]
+def _readSlx(stream: io.IOBase, blocksize: int, formver: List[int], strict: bool) -> Frame:
+    format = formver[0]
+    version = formver[1]
+    f = FRAME_FORMATS[format]
     s = struct.calcsize(f)
     here = stream.tell()
     bad = 0
@@ -149,7 +150,7 @@ def _readSlx(stream: io.IOBase, blocksize: int, format: List[int], strict: bool)
         elif here > 0:
             bad += 1
             if bad == 1:
-                logger.warn('unexpected offset at offset: %s. will try to find next frame', here)
+                logger.warn('unexpected offset %s at location: %s. will try to find next frame', data[0], here)
             if strict:
                 raise Exception('offset missmatch')
             # jump forward and try to catch next
@@ -160,23 +161,26 @@ def _readSlx(stream: io.IOBase, blocksize: int, format: List[int], strict: bool)
             raise Exception('location does not match expected offset')
 
     kv = {'headersize': s}
-    for i, d in enumerate(FRAME_DEFINITIONS[fform]):
+    for i, d in enumerate(FRAME_DEFINITIONS[format]):
         name = d['name']
         if not name == "-":
             kv[name] = data[i]
-            if name == 'flags' and FLAG_FORMATS[fform]:
+            if name == 'flags' and FLAG_FORMATS[format]:
                 if FLAG_AS_BINARY:
                     kv[name] = f'({kv[name]}) {kv[name]:016b}'
-                flagform = FLAG_FORMATS[fform]
+                flagform = FLAG_FORMATS[format]
                 flags = data[i]
                 for k, v in flagform.items():
                     kv[k] = flags & v == v
     b = Frame(**kv)
-    if b.channel <= 5:
+    packetsize = b.packetsize
+    if version == 1 and not b.has_tbd1:
+        packetsize = b.framesize - 168
+
+    if version == 1 or (version == 2 and b.channel <= 5):
         extra = 168-s
-        # logger.debug('low channel. reading extra %d bytes', extra)
         stream.read(extra)
-    b.packet = stream.read(b.packetsize)
+    b.packet = stream.read(packetsize)
 
     return b
 

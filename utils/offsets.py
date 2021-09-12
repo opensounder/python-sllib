@@ -1,3 +1,4 @@
+from typing import List
 import csv
 import os
 import struct
@@ -32,10 +33,11 @@ def create_csv_with_header(csvfile, fields) -> csv.DictWriter:
     return writer
 
 
-def readfile(stream: IOBase, writer: csv.DictWriter, format: int, version: int, maxcount: int = 20):
+def readfile(stream: IOBase, writer: csv.DictWriter, formver: List[int], maxcount: int = 20):
     count = 0
     last = 0
-    offset = 0
+    offset = 8
+    last_end = 8
     while True:
         stream.seek(offset)
         buf = stream.read(4)
@@ -47,17 +49,20 @@ def readfile(stream: IOBase, writer: csv.DictWriter, format: int, version: int, 
 
         if data[0] == offset:  # yes, we have an equal
             stream.seek(offset)  # go back a bit
-            fr = Frame.read(stream, format)
-            dct = fr.to_dict(format)
+            fr = Frame.read(stream, formver)
+            told = stream.tell()
+            dct = fr.to_dict(formver[0])
             dct['start'] = offset
-            dct['end'] = stream.tell()
+            dct['end'] = told
+            dct['offby'] = offset - last_end
             dct['size'] = offset-last
-            dct['asdf'] = dct['packetsize'] - dct['framesize']
+            dct['asdf'] = [fr.channel, f'({fr.flags}) {fr.flags:016b}']
             writer.writerow(dct)
             # print(
             #     'match at', offset, 'now', dct['now'], 'size', offset - last, 'asd', now-offset-fr.headersize,
             #     fr.to_dict(format=3, fields=['offset', 'index', 'latitude', 'packetsize', 'headersize'])
             # )
+            last_end = told
             last = offset
             count += 1
 
@@ -74,10 +79,11 @@ def main(filename, maxcount):
     with open(filename, 'rb') as stream:
         with open(outfile, 'w', newline='') as csvfile:
             reader = Reader(stream)
+            formver = [reader.header.format, reader.header.version]
             print(reader.header)
-            fields = ['start', 'end', 'size', 'asdf'] + reader.header.fields
+            fields = ['start', 'end', 'offby', 'size', 'asdf'] + reader.fields
             writer = create_csv_with_header(csvfile, fields)
-            count = readfile(stream, writer, reader.header.format, reader.header.version, maxcount)
+            count = readfile(stream, writer, formver, maxcount)
             print(f'wrote {count} records to {outfile}')
 
 
