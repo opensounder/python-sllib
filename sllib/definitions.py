@@ -61,17 +61,13 @@ F2_FRAME = (
 # H = ushort(2), I= uint(4)
 F3_FRAME = (
     {'name': 'offset', 'type': 'I'},
-    # {'name': 'a', 'type': 'H'},
-    # {'name': 'b', 'type': 'H'},
     {'name': '-', 'type': 'I'},
     {'name': 'framesize', 'type': 'H'},
     {'name': 'previous_framesize', 'type': 'H'},
-    # {'name': 'framesize', 'type': 'I'},
-    # {'name': 'previous_framesize', 'type': 'I'},
     {'name': 'channel', 'type': 'I'},
     {'name': 'frame_index', 'type': 'I'},
-    {'name': 'lower_limit', 'type': 'f'},
     {'name': 'upper_limit', 'type': 'f'},
+    {'name': 'lower_limit', 'type': 'f'},
     {'name': '-', 'type': '12s'},
     {'name': 'created_at', 'type': 'I'},
     {'name': 'packetsize', 'type': 'I'},
