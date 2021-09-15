@@ -8,6 +8,7 @@ __all__ = ['Frame', 'Reader', 'Header', 'create_reader', '__version__']
 
 __version__ = '0.2.3'
 
+
 @contextmanager
 def create_reader(filename, strict=False):
     f = open(filename, 'rb')

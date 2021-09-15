@@ -1,4 +1,5 @@
-from typing import List
+from sllib.errors import FieldNotFoundError
+from typing import List, Tuple
 
 import io
 import logging
@@ -27,6 +28,11 @@ class Reader:
         """generate a list of fieldnames for current format"""
         return FRAME_FIELDS[self.header.format] + CALCULATED_FIELDS
 
+    @property
+    def formver(self) -> Tuple[int]:
+        """return format and version as a tuple"""
+        return (self.header.format, self.header.version)
+
     def close(self):
         self.fs.close()
 
@@ -48,7 +54,7 @@ class Reader:
             if key in fields:
                 self._filter['fields'][key] = value
             else:
-                raise Exception(f'{key} is not a valid field to filter on')
+                raise FieldNotFoundError(f'{key} is not a valid field to filter on')
         return self
 
     def __iter__(self):

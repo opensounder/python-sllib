@@ -1,3 +1,4 @@
+from sllib.errors import NotEnoughDataError, OffsetError
 from typing import List
 import struct
 import math
@@ -74,13 +75,13 @@ class Frame(object):
             # slg is a conditional format for each packet... yuck
             return _readSlg(stream, blocksize)
         if formver[0] == 2:
-            return _readSl2(stream, blocksize, formver)
+            return _readSl2(stream, blocksize, formver, strict=strict)
         if formver[0] == 3:
             return _readSlx(stream, blocksize, strict=strict, formver=formver)
         raise Exception('unkown format')
 
 
-def _readSl2(stream: io.IOBase, blocksize: int, formver: List[int]) -> Frame:
+def _readSl2(stream: io.IOBase, blocksize: int, formver: List[int], strict: bool) -> Frame:
     format = formver[0]
     f = FRAME_FORMATS[format]
     s = struct.calcsize(f)
@@ -93,22 +94,24 @@ def _readSl2(stream: io.IOBase, blocksize: int, formver: List[int]) -> Frame:
             return None
         if len(buf) < s:
             print(f'This is bad. Only got {len(buf)}/{s} bytes=', buf)
-            raise Exception("this is bad")
+            raise NotEnoughDataError('got less bytes than expected during read')
         data = struct.unpack(f, buf)
         if data[0] == here:  # offset is allways first
             if bad > 1:
-                logger.warn('got back at offset: %s', here)
+                logger.warning('got back at offset: %s', here)
             break
         elif here > 0:
             bad += 1
             if bad == 1:
-                logger.warn('unexpected offset at offset: %s. will try to find next frame', here)
+                logger.warning('unexpected offset at offset: %s. will try to find next frame', here)
+            if strict:
+                raise OffsetError('offset missmatch')
             # jump forward and try to catch next
             here += 1
             stream.seek(here)
             continue
         else:
-            raise Exception('location does not match expected offset')
+            raise OffsetError('location does not match expected offset')
 
     kv = {'headersize': s}
     for i, d in enumerate(FRAME_DEFINITIONS[format]):
@@ -141,7 +144,7 @@ def _readSlx(stream: io.IOBase, blocksize: int, formver: List[int], strict: bool
             return None
         if len(buf) < s:
             print(f'This is bad. Only got {len(buf)}/{s} bytes=', buf)
-            raise Exception("this is bad")
+            raise NotEnoughDataError("this is bad")
         data = struct.unpack(f, buf)
         if data[0] == here:  # offset is always first value
             if bad > 1:
@@ -152,13 +155,13 @@ def _readSlx(stream: io.IOBase, blocksize: int, formver: List[int], strict: bool
             if bad == 1:
                 logger.warn('unexpected offset %s at location: %s. will try to find next frame', data[0], here)
             if strict:
-                raise Exception('offset missmatch')
+                raise OffsetError('offset missmatch')
             # jump forward and try to catch next
             here += 1
             stream.seek(here)
             continue
         else:
-            raise Exception('location does not match expected offset')
+            raise OffsetError('location does not match expected offset')
 
     kv = {'headersize': s}
     for i, d in enumerate(FRAME_DEFINITIONS[format]):

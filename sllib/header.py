@@ -27,5 +27,5 @@ class Header(object):
         if h.format == 1:
             h.terminal = struct.unpack('<h', filestream.read(2))
         if logger.level == logging.DEBUG:
-            logger.debug(h)
+            logger.debug('header %s', h)
         return h

@@ -36,8 +36,8 @@ class TestReaderSl3(unittest.TestCase):
             self.assertEqual(x.framesize, 2732, 'bad framesize')
             # print(x.to_dict(format=3))
 
-            self.assertAlmostEqual(x.upper_limit, 98.4, 2)
-            assert x.lower_limit == 0.0
+            self.assertAlmostEqual(x.lower_limit, 98.4, 2)
+            self.assertEqual(x.upper_limit, 0.0)
 
             assert x.frequency == 0
             self.assertAlmostEqual(x.gps_speed, 2.25, 2)
