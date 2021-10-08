@@ -14,8 +14,9 @@ SL2_V1 = os.path.join(BASEDIR,
 SL2_SOUTHERN1 = os.path.join(BASEDIR, 'sample-data-lowrance',
                                       'HDS5', 'southern1.sl2')
 
-SL2_CORRUPT_PARTLY = os.path.join(BASEDIR, 'sample-data-lowrance',
-                                      'other', 'corrupt_partly.sl2')
+SL2_CORRUPT_PARTLY = os.path.join(
+    BASEDIR, 'sample-data-lowrance',
+    'other', 'corrupt_partly.sl2')
 
 SL3_V1_A = os.path.join(
     BASEDIR, 'sample-data-lowrance', 'other', 'sonar-log-api-testdata.sl3')
